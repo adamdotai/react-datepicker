@@ -42,7 +42,7 @@ const Example = () => {
 };
 
 const Root = () => (
-    <DatePickerProvider adapter={dateFns}>
+    <DatePickerProvider adapter={hijriAdapter}>
         <div>
             <div className="hero">
                 <div className="hero__content">

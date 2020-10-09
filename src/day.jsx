@@ -107,7 +107,6 @@ class Day extends React.Component {
             startDate,
             endDate,
         } = this.props;
-
         if (
             !(selectsStart || selectsEnd || selectsRange) ||
             !selectingDate ||

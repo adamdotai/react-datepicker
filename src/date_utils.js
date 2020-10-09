@@ -179,7 +179,7 @@ export function getStartOfMonth(adapter, date) {
 export function getStartOfYear(adapter, dirtyDate) {
     var cleanDate = adapter.date(dirtyDate);
     var date = new Date(0);
-    date.setFullYear(adapter.getYear(cleanDate), 0, 1);
+    date.setFullYear(getYear(adapter,cleanDate), 0, 1);
     date.setHours(0, 0, 0, 0);
     return date;
 }
@@ -189,14 +189,14 @@ export function getStartOfQuarter(adapter, date) {
 }
 
 export function getStartOfToday(adapter) {
-    return getStartOfDay(adapter, adapter.date());
+    return adapter.startOfDay(adapter.date());
 }
 
 export function isSameYear(adapter, date1, date2) {
     if (date1 && date2) {
         return (
-            adapter.getYear(adapter.date(date1)) ===
-            adapter.getYear(adapter.date(date2))
+            getYear(adapter,adapter.date(date1)) ===
+            getYear(adapter,adapter.date(date2))
         );
     } else {
         return !date1 && !date2;
@@ -206,8 +206,8 @@ export function isSameYear(adapter, date1, date2) {
 export function isSameMonth(adapter, date1, date2) {
     if (date1 && date2) {
         return (
-            adapter.getMonth(adapter.date(date1)) ===
-            adapter.getMonth(adapter.date(date2))
+            getMonth(adapter,date1) ===
+            getMonth(adapter,date2)
         );
     } else {
         return !date1 && !date2;
@@ -216,10 +216,10 @@ export function isSameMonth(adapter, date1, date2) {
 
 export function startOfQuarter(adapter, dirtyDate) {
     var date = adapter.date(dirtyDate);
-    var currentMonth = date.getMonth();
+    var currentMonth = getMonth(adapter,date);
     var month = currentMonth - (currentMonth % 3);
-    date.setMonth(month, 1);
-    date.setHours(0, 0, 0, 0);
+    adapter.setMonth(date, month);
+    adapter.setHours(date, 0);
     return date;
 }
 
@@ -252,10 +252,10 @@ export function isEqual(adapter, date1, date2) {
 export function isDayInRange(adapter, day, startDate, endDate) {
     let valid;
     const start = getStartOfDay(adapter, startDate);
-    const end = adapter.endOfDay(endDate);
+    const end = adapter.endOfDay(adapter.date(endDate));
 
     try {
-        valid = adapter.isWithinRange(day, { start, end });
+        valid = adapter.isWithinRange(adapter.date(day), [ start, end ]);
     } catch (err) {
         valid = false;
     }
@@ -338,7 +338,7 @@ export function getMonthShortInLocale(adapter, month, locale) {
 export function getQuarterShortInLocale(adapter, quarter, locale) {
     return formatDate(
         adapter,
-        setQuarter(adapter, newDate(), quarter),
+        setQuarter(adapter, adapter.date(), quarter),
         'QQQ',
         locale
     );
@@ -355,11 +355,11 @@ export function isDayDisabled(
         isOutOfBounds(adapter, day, { minDate, maxDate }) ||
         (excludeDates &&
             excludeDates.some((excludeDate) =>
-                adapter.isSameDay(day, excludeDate)
+                isSameDay(adapter, day, excludeDate)
             )) ||
         (includeDates &&
             !includeDates.some((includeDate) =>
-                adapter.isSameDay(day, includeDate)
+                isSameDay(adapter, day, includeDate)
             )) ||
         (filterDate && !filterDate(adapter.date(day))) ||
         false
@@ -370,7 +370,7 @@ export function isDayExcluded(adapter, day, { excludeDates } = {}) {
     return (
         (excludeDates &&
             excludeDates.some((excludeDate) =>
-                adapter.isSameDay(adapter, day, excludeDate)
+                isSameDay(adapter, day, excludeDate)
             )) ||
         false
     );
@@ -397,17 +397,17 @@ export function isMonthDisabled(
 }
 
 export function isMonthinRange(
-    { getYear, getMonth },
+    adapter,
     startDate,
     endDate,
     m,
     day
 ) {
-    const startDateYear = getYear(startDate);
-    const startDateMonth = getMonth(startDate);
-    const endDateYear = getYear(endDate);
-    const endDateMonth = getMonth(endDate);
-    const dayYear = getYear(day);
+    const startDateYear = getYear(adapter,startDate);
+    const startDateMonth = getMonth(adapter,startDate);
+    const endDateYear = getYear(adapter,endDate);
+    const endDateMonth = getMonth(adapter,endDate);
+    const dayYear = getYear(adapter,day);
     if (startDateYear === endDateYear && startDateYear === dayYear) {
         return startDateMonth <= m && m <= endDateMonth;
     } else if (startDateYear < endDateYear) {
@@ -445,11 +445,11 @@ export function isYearDisabled(adapter, year, { minDate, maxDate } = {}) {
 }
 
 export function isQuarterInRange(adapter, startDate, endDate, q, day) {
-    const startDateYear = adapter.getYear(startDate);
+    const startDateYear = getYear(adapter,startDate);
     const startDateQuarter = getQuarter(adapter, startDate);
-    const endDateYear = adapter.getYear(endDate);
+    const endDateYear = getYear(adapter,endDate);
     const endDateQuarter = getQuarter(adapter, endDate);
-    const dayYear = adapter.getYear(day);
+    const dayYear = getYear(adapter,day);
     if (startDateYear === endDateYear && startDateYear === dayYear) {
         return startDateQuarter <= q && q <= endDateQuarter;
     } else if (startDateYear < endDateYear) {
@@ -473,7 +473,7 @@ export function isTimeDisabled(adapter, time, disabledTimes) {
     for (let i = 0; i < l; i++) {
         if (
             getHours(adapter, disabledTimes[i]) === getHours(adapter, time) &&
-            adapter.getMinutes(disabledTimes[i]) === adapter.getMinutes(time)
+            getMinutes(adapter,disabledTimes[i]) === getMinutes(adapter,time)
         ) {
             return true;
         }
@@ -488,21 +488,21 @@ export function isTimeInDisabledRange(adapter, time, { minTime, maxTime }) {
     }
     const base = adapter.date();
     const baseTime = adapter.setHours(
-        adapter.setMinutes(base, adapter.getMinutes(time)),
+        adapter.setMinutes(base, getMinutes(adapter,time)),
         getHours(adapter, time)
     );
     const min = adapter.setHours(
-        adapter.setMinutes(base, adapter.getMinutes(minTime)),
+        adapter.setMinutes(base, getMinutes(adapter,minTime)),
         getHours(adapter, minTime)
     );
     const max = adapter.setHours(
-        adapter.setMinutes(base, adapter.getMinutes(maxTime)),
+        adapter.setMinutes(base, getMinutes(adapter,maxTime)),
         getHours(adapter, maxTime)
     );
 
     let valid;
     try {
-        valid = !adapter.isWithinRange(baseTime, { start: min, end: max });
+        valid = !adapter.isWithinRange(baseTime, [min,max]);
     } catch (err) {
         valid = false;
     }
@@ -580,12 +580,12 @@ export function yearsDisabledBefore(
     day,
     { minDate, yearItemNumber = DEFAULT_YEAR_ITEM_NUMBER } = {}
 ) {
-    const previousYear = startOfYear(
+    const previousYear = getStartOfYear(
         adapter,
         addMonths(adapter, day, yearItemNumber * -12)
     );
     const { endPeriod } = getYearsPeriod(adapter, previousYear, yearItemNumber);
-    const minDateYear = minDate && adapter.getYear(minDate);
+    const minDateYear = minDate && getYear(adapter,minDate);
     return (minDateYear && minDateYear > endPeriod) || false;
 }
 
@@ -615,7 +615,7 @@ export function yearsDisabledAfter(
 ) {
     const nextYear = addMonths(adapter, day, yearItemNumber * 12);
     const { startPeriod } = getYearsPeriod(adapter, nextYear, yearItemNumber);
-    const maxDateYear = maxDate && adapter.getYear(maxDate);
+    const maxDateYear = maxDate && getYear(adapter,maxDate);
     return (maxDateYear && maxDateYear < startPeriod) || false;
 }
 
@@ -700,7 +700,7 @@ export function timesToInjectAfter(
     for (let i = 0; i < l; i++) {
         const injectedTime = adapter.addMinutes(
             adapter.addHours(startOfDay, getHours(adapter, injectedTimes[i])),
-            adapter.getMinutes(injectedTimes[i])
+            getMinutes(adapter,injectedTimes[i])
         );
         const nextTime = adapter.addMinutes(
             startOfDay,
@@ -728,7 +728,7 @@ export function getYearsPeriod(
     yearItemNumber = DEFAULT_YEAR_ITEM_NUMBER
 ) {
     const endPeriod =
-        Math.ceil(adapter.getYear(date) / yearItemNumber) * yearItemNumber;
+        Math.ceil(getYear(adapter,date) / yearItemNumber) * yearItemNumber;
     const startPeriod = endPeriod - (yearItemNumber - 1);
     return { startPeriod, endPeriod };
 }
@@ -814,8 +814,8 @@ export function differenceInCalendarMonths(
     var dateLeft = adapter.date(dirtyDateLeft);
     var dateRight = adapter.date(dirtyDateRight);
 
-    var yearDiff = adapter.getYear(dateLeft) - adapter.getYear(dateRight);
-    var monthDiff = dateLeft.getMonth() - dateRight.getMonth();
+    var yearDiff = getYear(adapter,dateLeft) - getYear(adapter,dateRight);
+    var monthDiff = getMonth(adapter,dateLeft) - getMonth(adapter,dateRight);
 
     return yearDiff * 12 + monthDiff;
 }
@@ -828,7 +828,7 @@ export function differenceInCalendarYears(
     var dateLeft = adapter.date(dirtyDateLeft);
     var dateRight = adapter.date(dirtyDateRight);
 
-    return adapter.getYear(dateLeft) - adapter.getYear(dateRight);
+    return getYear(adapter,dateLeft) - getYear(adapter,dateRight);
 }
 
 export function getDay(adapter, dirtyDate) {
@@ -860,14 +860,14 @@ export function isDate(_, value) {
 export function setQuarter(adapter, dirtyDate, dirtyQuarter) {
     var date = adapter.date(dirtyDate);
     var quarter = toInteger(dirtyQuarter);
-    var oldQuarter = Math.floor(date.getMonth() / 3) + 1;
+    var oldQuarter = Math.floor(getMonth(adapter,date) / 3) + 1;
     var diff = quarter - oldQuarter;
-    return adapter.setMonth(date, date.getMonth() + diff * 3);
+    return adapter.setMonth(date, getMonth(adapter,date) + diff * 3);
 }
 
 export function getQuarter(adapter, dirtyDate) {
     var date = adapter.date(dirtyDate);
-    var quarter = Math.floor(date.getMonth() / 3) + 1;
+    var quarter = Math.floor(getMonth(adapter,date) / 3) + 1;
     return quarter;
 }
 
@@ -895,7 +895,7 @@ export function startOfWeekYear(adapter, dirtyDate, dirtyOptions) {
 
 function getWeekYear(adapter, dirtyDate, dirtyOptions) {
     var date = adapter.date(dirtyDate);
-    var year = adapter.getYear(date);
+    var year = getYear(adapter,date);
 
     var options = dirtyOptions || {};
     var locale = options.locale;
@@ -974,6 +974,18 @@ export function isBefore(adapter, date, value) {
 
 export function isAfter(adapter, date, value) {
     return adapter.isAfter(adapter.date(date), value);
+}
+
+export function setYear(adapter, date) {
+    return adapter.setYear(adapter.date(date));
+}
+
+export function getYear(adapter, date) {
+    return adapter.getYear(adapter.date(date));
+}
+
+export function getMonth(adapter, date) {
+    return adapter.getMonth(adapter.date(date));
 }
 
 export function getHours(adapter, date) {
