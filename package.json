@@ -11,6 +11,7 @@
     "module": "dist/es/index.js",
     "unpkg": "dist/react-datepicker.min.js",
     "style": "dist/react-datepicker.min.css",
+    "types": "types/index.d.ts",
     "files": [
         "*.md",
         "dist",
@@ -107,6 +108,7 @@
         "react-dom": "^16.9.0"
     },
     "dependencies": {
+        "@date-io/core": "^2.10.6",
         "classnames": "^2.2.6",
         "date-fns": "^2.16.1",
         "prop-types": "^15.7.2",
