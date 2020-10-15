@@ -13,6 +13,7 @@ import { withDateUtils } from './withDateUtils';
 
 export { default as CalendarContainer } from './calendar_container';
 export { DatePickerProvider } from './DatePickerProvider';
+export { useDateUtils } from './hooks/useDateUtils';
 export { registerLocale, setDefaultLocale, getDefaultLocale };
 
 const outsideClickIgnoreClass = 'react-datepicker-ignore-onclickoutside';

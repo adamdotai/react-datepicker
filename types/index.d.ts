@@ -20,6 +20,7 @@
 import * as React from 'react';
 import * as Popper from 'popper.js';
 import { IUtils } from '@date-io/core';
+import * as utilities from '../src/date_utils';
 
 export function registerLocale(localeName: string, localeData: {}): void;
 export function setDefaultLocale(localeName: string): void;
@@ -32,6 +33,8 @@ interface HighlightDates {
 }
 
 export class DatePickerProvider extends React.Component<{adapter: IUtils; locale?: string}> {}
+
+export function useDateUtils(): {adapter: IUtils; locale?: string; utils: Partial<IUtils>}
 
 export interface ReactDatePickerProps {
     adjustDateOnChange?: boolean;
