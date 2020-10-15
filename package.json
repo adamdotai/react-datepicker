@@ -4,7 +4,7 @@
     "repository": "https://github.com/adamdotai/react-datepicker",
     "registry": "https://npm.pkg.github.com/",
     "description": "A simple and reusable datepicker component for React",
-    "version": "3.2.2",
+    "version": "3.2.3",
     "license": "MIT",
     "main": "dist/index.js",
     "browser": "dist/react-datepicker.min.js",
